@@ -1,0 +1,21 @@
+{
+  "name": "easy-deploy",
+  "version": "1.0.0",
+  "description": "An open source project to deploy your frontend in one click on your own resources.",
+  "main": "index.js",
+  "author": "Alex",
+  "license": "MIT",
+  "scripts": {
+    "build": "rimraf ./build && tsc",
+    "deploy": "npx ts-node ./src/index.ts"
+  },
+  "dependencies": {
+    "@types/node": "^18.15.11",
+    "aws-sdk": "^2.1347.0",
+    "typescript": "^5.0.3"
+  },
+  "devDependencies": {
+    "rimraf": "^4.4.1",
+    "ts-node": "^10.9.1"
+  }
+}
