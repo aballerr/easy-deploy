@@ -152,6 +152,8 @@ async function uploadFolder(folderName: string, keyBase: string) {
 
   return Promise.resolve();
 }
+
+// random
 // s3.putObject({});
 // uploadFiles();
 // const directoryPath = path.join(__dirname, "sample-react-build/static");
