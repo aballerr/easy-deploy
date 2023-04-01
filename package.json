@@ -2,12 +2,16 @@
   "name": "youdeploy",
   "version": "1.0.4",
   "description": "An open source project to deploy your frontend in one click on your own resources.",
-  "main": "index.js",
+  "main": "build/index.js",
   "author": "Alex",
   "license": "MIT",
   "scripts": {
     "build": "rimraf ./build && tsc",
-    "deploy": "npx ts-node ./src/index.ts"
+    "deploy": "npx ts-node ./src/index.ts",
+    "update-npm": "npm version patch && npm publish"
+  },
+  "bin": {
+    "youdeploy": "index.js"
   },
   "dependencies": {
     "@types/node": "^18.15.11",
