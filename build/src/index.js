@@ -203,6 +203,7 @@ function uploadFolder(folderName, keyBase) {
         });
     });
 }
+// random
 // s3.putObject({});
 // uploadFiles();
 // const directoryPath = path.join(__dirname, "sample-react-build/static");
