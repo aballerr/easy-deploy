@@ -27,6 +27,6 @@
     "url": "https://github.com/aballerr/easy-deploy.git"
   },
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   }
 }
