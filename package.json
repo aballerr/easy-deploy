@@ -8,8 +8,7 @@
   "scripts": {
     "build": "rimraf ./build && tsc",
     "deploy": "npx ts-node ./src/index.ts",
-    "update-npm": "yarn run build && cp package.json build && npm version patch && npm publish",
-    "semantic-release": "semantic-release"
+    "update-npm": "yarn run build && cp package.json build && npm version patch && npm publish"
   },
   "bin": {
     "youdeploy": "index.js"
@@ -17,13 +16,11 @@
   "dependencies": {
     "@types/node": "^18.15.11",
     "aws-sdk": "^2.1347.0",
-    "semantic-release": "^21.0.1",
     "typescript": "^5.0.3"
   },
   "devDependencies": {
     "rimraf": "^4.4.1",
-    "ts-node": "^10.9.1",
-    "semantic-release": "^21.0.1"
+    "ts-node": "^10.9.1"
   },
   "repository": {
     "type": "git",
