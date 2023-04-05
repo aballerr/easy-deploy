@@ -82,3 +82,62 @@ export async function configureS3Bucket(bucketName: string) {
     return Promise.reject(err);
   }
 }
+
+export async function uploadFiles(
+  bucketName: string,
+  filepath: string,
+  key: string
+) {
+  try {
+    const fileStream = fs.createReadStream(filepath);
+    const s3FileUploadParams = {
+      Bucket: bucketName,
+      Body: fileStream,
+      Key: key,
+      ContentType: mime.lookup(key) || "text/html",
+    };
+
+    const upload = await client.send(new PutObjectCommand(s3FileUploadParams));
+
+    return Promise.resolve();
+  } catch (err) {
+    return Promise.reject(err);
+  }
+}
+
+export async function uploadFolderToS3Bucket(
+  baseDirectory: string,
+  bucketName: string,
+  folderName: string,
+  keyBase: string
+) {
+  try {
+    const directoryPath = path.join(baseDirectory, folderName);
+
+    fs.readdir(directoryPath, function (err, files) {
+      if (err) {
+        return console.log("Unable to scan directory: " + err);
+      }
+      //listing all files using forEach
+      files.forEach(async function (file) {
+        if (fs.lstatSync(path.join(directoryPath, file)).isFile()) {
+          await uploadFiles(
+            bucketName,
+            path.join(directoryPath, file),
+            keyBase + file
+          );
+        } else {
+          await uploadFolderToS3Bucket(
+            baseDirectory,
+            bucketName,
+            `${folderName}/${file}`,
+            `${keyBase}${file}/`
+          );
+        }
+      });
+    });
+    return Promise.resolve();
+  } catch (err) {
+    return Promise.reject(err);
+  }
+}

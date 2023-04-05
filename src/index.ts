@@ -1,23 +1,33 @@
 #!/usr/bin/env node
-import { uploadFolderTos3Bucket } from "./s3-deploy";
-
 import {
+  configureS3Bucket,
+  createCloudFrontDistribution,
   createCloudFrontInvalidation,
   createBucket,
   deleteBucket,
-  configureS3Bucket,
+  getDistributionConfig,
+  uploadFolderToS3Bucket,
 } from "./aws/wrappers";
 
 const BUCKET_NAME = "mybucketasdfadzz123123";
 
 async function main() {
-  await deleteBucket(BUCKET_NAME);
+  // await deleteBucket(BUCKET_NAME);
+  // await createBucket(BUCKET_NAME);
+  // await configureS3Bucket(BUCKET_NAME);
+  // await uploadFolderToS3Bucket(
+  //   __dirname,
+  //   BUCKET_NAME,
+  //   "sample-react-build",
+  //   ""
+  // );
+  // await createCloudFrontInvalidation("EODP9VY2T4F47");
+  // const result = await getDistributionConfig("EODP9VY2T4F47");
+  // console.log(JSON.stringify(result.Distribution?.DistributionConfig));
+  // console.log(directoryPath);
 
-  await createBucket(BUCKET_NAME);
-
-  await configureS3Bucket(BUCKET_NAME);
-  await uploadFolderTos3Bucket(BUCKET_NAME, "sample-react-build", "");
-  await createCloudFrontInvalidation("EODP9VY2T4F47");
+  await createCloudFrontDistribution();
+  // console.log(String(new Date()));
 }
 
 main();
