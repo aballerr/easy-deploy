@@ -1,10 +1,24 @@
-#!/usr/bin/env node
-import AWS from "aws-sdk";
-import path from "path";
-import fs from "fs";
+import {
+  CloudFrontClient,
+  CreateInvalidationCommand,
+} from "@aws-sdk/client-cloudfront";
 
-const cloudfront = new AWS.CloudFront({});
+import { cloudfrontInvalidationParams } from "./aws/params";
 
-export function invalidate() {
-  cloudfront.createInvalidation();
+const client = new CloudFrontClient({});
+
+export async function createCloudFront() {
+  const createInvalidationCommand = new CreateInvalidationCommand(
+    cloudfrontInvalidationParams
+  );
+
+  return client.send(createInvalidationCommand);
+}
+
+export async function invalidate() {
+  const createInvalidationCommand = new CreateInvalidationCommand(
+    cloudfrontInvalidationParams
+  );
+
+  return client.send(createInvalidationCommand);
 }

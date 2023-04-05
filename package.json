@@ -14,11 +14,14 @@
     "youdeploy": "index.js"
   },
   "dependencies": {
+    "@aws-sdk/client-cloudfront": "^3.306.0",
     "@types/node": "^18.15.11",
     "aws-sdk": "^2.1347.0",
+    "mime-types": "^2.1.35",
     "typescript": "^5.0.3"
   },
   "devDependencies": {
+    "@types/mime-types": "^2.1.1",
     "rimraf": "^4.4.1",
     "ts-node": "^10.9.1"
   },

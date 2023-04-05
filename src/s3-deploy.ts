@@ -2,25 +2,13 @@
 import AWS from "aws-sdk";
 import path from "path";
 import fs from "fs";
+import mime from "mime-types";
 
 const s3 = new AWS.S3({});
 
 const BUCKET_NAME = "mybucketasdfadzz123123";
 
 console.log(__dirname);
-
-var websiteParams = {
-  Bucket: "mybucketasdfadzz123123" /* required */,
-  WebsiteConfiguration: {
-    /* required */
-    ErrorDocument: {
-      Key: "index.html" /* required */,
-    },
-    IndexDocument: {
-      Suffix: "index.html" /* required */,
-    },
-  },
-};
 
 const policy = {
   Version: "2008-10-17",
@@ -55,18 +43,6 @@ async function main() {
     .catch((err) => {
       console.log(err);
     });
-
-  await s3
-    .putBucketPolicy(bucketPolicyParams)
-    .promise()
-    .then((data) => {
-      console.log(data);
-      console.log("success");
-    })
-    .catch((err) => {
-      console.log(err);
-      console.log("error failed");
-    });
 }
 
 export async function deleteBucket(bucketName: string) {
@@ -79,9 +55,9 @@ export async function deleteBucket(bucketName: string) {
       }
     }
   }
+  console.log("done deleting");
 
-  return Promise.resolve();
-  // return s3.deleteBucket({ Bucket: bucketName }).promise();
+  return s3.deleteBucket({ Bucket: bucketName }).promise();
 }
 
 export async function createBucket(bucketName: string) {
@@ -95,25 +71,41 @@ export async function createBucket(bucketName: string) {
   }
 }
 
+// Making the s3 bucket website compatible
 export async function configureS3Bucket(bucketName: string) {
-  // setting up the website
-  await s3
-    .putBucketWebsite(websiteParams)
-    .promise()
-    .then((data) => {
-      console.log(data);
-      console.log("success");
-    })
-    .catch((err) => {
-      console.log(err);
-      console.log("error failed");
-    });
+  const websiteParams = {
+    Bucket: bucketName /* required */,
+    WebsiteConfiguration: {
+      /* required */
+      ErrorDocument: {
+        Key: "index.html" /* required */,
+      },
+      IndexDocument: {
+        Suffix: "index.html" /* required */,
+      },
+    },
+  };
+
+  try {
+    await s3.putBucketWebsite(websiteParams).promise();
+    console.log("successfully configured bucket as s3 website");
+
+    await s3.putBucketPolicy(bucketPolicyParams).promise();
+    console.log("successfully configured bucket policy");
+
+    return Promise.resolve();
+  } catch (err) {}
 }
 
 // main();
 
 async function uploadFiles(filepath: string, key: string) {
-  const uploadParams = { Bucket: BUCKET_NAME, Key: "", Body: "" };
+  const uploadParams = {
+    Bucket: BUCKET_NAME,
+    Key: "",
+    Body: "",
+    ContentType: "",
+  };
   // const file = "./build/index.js";
 
   const fileStream = fs.createReadStream(filepath);
@@ -121,6 +113,7 @@ async function uploadFiles(filepath: string, key: string) {
   // @ts-ignore
   uploadParams.Body = fileStream;
   uploadParams.Key = key;
+  uploadParams.ContentType = mime.lookup(key) || "text/html";
 
   // @ts-ignore
   return s3
