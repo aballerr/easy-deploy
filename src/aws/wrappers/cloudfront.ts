@@ -3,11 +3,12 @@ import {
   CreateInvalidationCommand,
 } from "@aws-sdk/client-cloudfront";
 
-import { cloudfrontInvalidationParams } from "./aws/params";
+import { cloudfrontInvalidationParams } from "../params";
 
 const client = new CloudFrontClient({});
 
-export async function createCloudFront() {
+export async function createCloudFront(distributionId: string) {
+  cloudfrontInvalidationParams.DistributionId = distributionId;
   const createInvalidationCommand = new CreateInvalidationCommand(
     cloudfrontInvalidationParams
   );
@@ -15,7 +16,8 @@ export async function createCloudFront() {
   return client.send(createInvalidationCommand);
 }
 
-export async function invalidate() {
+export async function createCloudFrontInvalidation(distributionId: string) {
+  cloudfrontInvalidationParams.DistributionId = distributionId;
   const createInvalidationCommand = new CreateInvalidationCommand(
     cloudfrontInvalidationParams
   );

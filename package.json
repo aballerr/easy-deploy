@@ -15,8 +15,8 @@
   },
   "dependencies": {
     "@aws-sdk/client-cloudfront": "^3.306.0",
+    "@aws-sdk/client-s3": "^3.306.0",
     "@types/node": "^18.15.11",
-    "aws-sdk": "^2.1347.0",
     "mime-types": "^2.1.35",
     "typescript": "^5.0.3"
   },

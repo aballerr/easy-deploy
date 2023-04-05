@@ -1,159 +1,146 @@
 #!/usr/bin/env node
-import AWS from "aws-sdk";
 import path from "path";
 import fs from "fs";
 import mime from "mime-types";
+import { s3ACLPolicy } from "./aws/params";
+import { s3WebsiteParams } from "./aws/params";
+import {
+  S3Client,
+  ListObjectsCommand,
+  CreateBucketCommand,
+  PutBucketWebsiteCommand,
+  PutBucketPolicyCommand,
+  PutObjectCommand,
+  DeleteObjectCommand,
+  DeleteBucketCommand,
+} from "@aws-sdk/client-s3";
 
-const s3 = new AWS.S3({});
-
-const BUCKET_NAME = "mybucketasdfadzz123123";
-
-console.log(__dirname);
-
-const policy = {
-  Version: "2008-10-17",
-  Id: "PolicyForPublicWebsiteContent",
-  Statement: [
-    {
-      Sid: "PublicReadGetObject",
-      Effect: "Allow",
-      Principal: {
-        AWS: "*",
-      },
-      Action: "s3:GetObject",
-      Resource: "arn:aws:s3:::mybucketasdfadzz123123/*",
-    },
-  ],
-};
-
-const bucketPolicyParams = {
-  Bucket: "mybucketasdfadzz123123",
-  Policy: JSON.stringify(policy),
-};
-
-async function main() {
-  // creating bucket
-  await s3
-    .createBucket({ Bucket: BUCKET_NAME })
-    .promise()
-    .then((data) => {
-      console.log(data);
-      console.log("success");
-    })
-    .catch((err) => {
-      console.log(err);
-    });
-}
+const client = new S3Client({});
 
 export async function deleteBucket(bucketName: string) {
-  const results = await s3.listObjects({ Bucket: bucketName }).promise();
+  try {
+    const results = await client.send(
+      new ListObjectsCommand({ Bucket: bucketName })
+    );
 
-  if (results.Contents) {
-    for (const file of results.Contents) {
-      if (file.Key) {
-        await s3.deleteObject({ Bucket: bucketName, Key: file.Key }).promise();
+    if (results.Contents) {
+      for (const file of results.Contents) {
+        if (file.Key)
+          await client.send(
+            new DeleteObjectCommand({ Bucket: bucketName, Key: file.Key })
+          );
       }
     }
-  }
-  console.log("done deleting");
 
-  return s3.deleteBucket({ Bucket: bucketName }).promise();
+    await client.send(new DeleteBucketCommand({ Bucket: bucketName }));
+
+    console.log("finished deleting s3 bucket");
+
+    return Promise.resolve();
+  } catch (err) {
+    return Promise.reject(err);
+  }
 }
 
 export async function createBucket(bucketName: string) {
   try {
-    const data = await s3.createBucket({ Bucket: bucketName }).promise();
-    console.log(data);
+    const createBucketCommand = new CreateBucketCommand({ Bucket: bucketName });
+    const data = await client.send(createBucketCommand);
+
     console.log("Successfully created a bucket");
+    return Promise.resolve();
   } catch (err) {
     console.log(err);
     console.log("failed to create bucket");
+    return Promise.reject();
   }
 }
 
 // Making the s3 bucket website compatible
 export async function configureS3Bucket(bucketName: string) {
   const websiteParams = {
-    Bucket: bucketName /* required */,
-    WebsiteConfiguration: {
-      /* required */
-      ErrorDocument: {
-        Key: "index.html" /* required */,
-      },
-      IndexDocument: {
-        Suffix: "index.html" /* required */,
-      },
-    },
+    ...s3WebsiteParams,
+    Bucket: bucketName,
   };
 
   try {
-    await s3.putBucketWebsite(websiteParams).promise();
+    const putBucketWebsiteCommand = new PutBucketWebsiteCommand(websiteParams);
+    await client.send(putBucketWebsiteCommand);
+
     console.log("successfully configured bucket as s3 website");
 
-    await s3.putBucketPolicy(bucketPolicyParams).promise();
+    await client.send(
+      new PutBucketPolicyCommand({
+        Bucket: bucketName,
+        Policy: JSON.stringify(s3ACLPolicy),
+      })
+    );
+
     console.log("successfully configured bucket policy");
 
     return Promise.resolve();
-  } catch (err) {}
+  } catch (err) {
+    return Promise.reject(err);
+  }
 }
 
-// main();
+export async function uploadFiles(
+  bucketName: string,
+  filepath: string,
+  key: string
+) {
+  try {
+    const fileStream = fs.createReadStream(filepath);
+    const s3FileUploadParams = {
+      Bucket: bucketName,
+      Body: fileStream,
+      Key: key,
+      ContentType: mime.lookup(key) || "text/html",
+    };
 
-async function uploadFiles(filepath: string, key: string) {
-  const uploadParams = {
-    Bucket: BUCKET_NAME,
-    Key: "",
-    Body: "",
-    ContentType: "",
-  };
-  // const file = "./build/index.js";
+    const uploadCommany = await client.send(
+      new PutObjectCommand(s3FileUploadParams)
+    );
 
-  const fileStream = fs.createReadStream(filepath);
+    // await s3.upload(s3FileUploadParams).promise();
 
-  // @ts-ignore
-  uploadParams.Body = fileStream;
-  uploadParams.Key = key;
-  uploadParams.ContentType = mime.lookup(key) || "text/html";
-
-  // @ts-ignore
-  return s3
-    .upload(uploadParams)
-    .promise()
-    .then((data) => {
-      // console.log(data);
-      // console.log("success");
-    })
-    .catch((err) => {
-      console.log(err);
-      console.log("failure");
-    });
+    return Promise.resolve();
+  } catch (err) {
+    return Promise.reject(err);
+  }
 }
 
 export async function uploadFolderTos3Bucket(
+  bucketName: string,
   folderName: string,
   keyBase: string
 ) {
-  const directoryPath = path.join(__dirname, folderName);
+  try {
+    const directoryPath = path.join(__dirname, folderName);
 
-  fs.readdir(directoryPath, function (err, files) {
-    //handling error
-    if (err) {
-      return console.log("Unable to scan directory: " + err);
-    }
-    //listing all files using forEach
-    files.forEach(async function (file) {
-      // Do whatever you want to do with the file
-      if (fs.lstatSync(path.join(directoryPath, file)).isFile()) {
-        await uploadFiles(path.join(directoryPath, file), keyBase + file);
-      } else {
-        await uploadFolderTos3Bucket(
-          `${folderName}/${file}`,
-          `${keyBase}${file}/`
-        );
-        // console.log(`${folderName}/${file}`);
+    fs.readdir(directoryPath, function (err, files) {
+      if (err) {
+        return console.log("Unable to scan directory: " + err);
       }
+      //listing all files using forEach
+      files.forEach(async function (file) {
+        if (fs.lstatSync(path.join(directoryPath, file)).isFile()) {
+          await uploadFiles(
+            bucketName,
+            path.join(directoryPath, file),
+            keyBase + file
+          );
+        } else {
+          await uploadFolderTos3Bucket(
+            bucketName,
+            `${folderName}/${file}`,
+            `${keyBase}${file}/`
+          );
+        }
+      });
     });
-  });
-
-  return Promise.resolve();
+    return Promise.resolve();
+  } catch (err) {
+    return Promise.reject(err);
+  }
 }
