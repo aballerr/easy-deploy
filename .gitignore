@@ -1,3 +1,4 @@
 node_modules/*
 src/sample-react-build/*
 build/*
+my-app/*
