@@ -1,12 +1,12 @@
 #!/usr/bin/env node
-import {
-  createBucket,
-  configureS3Bucket,
-  deleteBucket,
-  uploadFolderTos3Bucket,
-} from "./s3-deploy";
+import { uploadFolderTos3Bucket } from "./s3-deploy";
 
-import { createCloudFrontInvalidation } from "./aws/wrappers/cloudfront";
+import {
+  createCloudFrontInvalidation,
+  createBucket,
+  deleteBucket,
+  configureS3Bucket,
+} from "./aws/wrappers";
 
 const BUCKET_NAME = "mybucketasdfadzz123123";
 
