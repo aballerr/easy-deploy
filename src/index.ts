@@ -7,17 +7,19 @@ import {
   uploadFolderToS3Bucket,
 } from "./aws/wrappers";
 
-async function main(BUCKET_NAME: string) {
-  await createBucket(BUCKET_NAME);
-  await configureS3Bucket(BUCKET_NAME);
-  await uploadFolderToS3Bucket(
-    __dirname,
-    BUCKET_NAME,
-    "sample-react-build",
-    ""
-  );
+import { findRootDir } from "./utils";
 
-  await createOrInvalidateCloudfrontDistribution(BUCKET_NAME);
+async function main(BUCKET_NAME: string) {
+  findRootDir();
+  // await createBucket(BUCKET_NAME);
+  // await configureS3Bucket(BUCKET_NAME);
+  // await uploadFolderToS3Bucket(
+  //   __dirname,
+  //   BUCKET_NAME,
+  //   "sample-react-build",
+  //   ""
+  // );
+  // await createOrInvalidateCloudfrontDistribution(BUCKET_NAME);
 }
 
 main("13113111zztempbucket");
