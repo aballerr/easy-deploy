@@ -1,12 +1,19 @@
 import path from "path";
 import fs from "fs";
 import mime from "mime-types";
+import chalk from "chalk";
+
 import { s3ACLPolicy } from "../params";
 import { s3WebsiteParams } from "../params";
+import { AwsSdkError } from "../types";
 import {
   S3Client,
   ListObjectsCommand,
   CreateBucketCommand,
+  GetBucketWebsiteCommand,
+  GetBucketWebsiteOutput,
+  HeadBucketCommand,
+  GetBucketLocationCommand,
   PutBucketWebsiteCommand,
   PutBucketPolicyCommand,
   PutObjectCommand,
@@ -16,8 +23,36 @@ import {
 
 const client = new S3Client({});
 
+const bucketExistsError = new Error(
+  "Bucket already exists, it's likely another user owns this bucket.  Try a different bucket name"
+);
+
+export async function bucketExists(bucketName: string): Promise<boolean> {
+  try {
+    // await client.send(new HeadBucketCommand({ Bucket: bucketName }));
+    await client.send(new GetBucketLocationCommand({ Bucket: bucketName }));
+
+    return true;
+  } catch (err) {
+    const errorCode = err as AwsSdkError;
+
+    if (errorCode.Code === "AccessDenied") {
+      throw bucketExistsError;
+    }
+
+    return false;
+  }
+}
+
 export async function deleteBucket(bucketName: string) {
   try {
+    const be = await bucketExists(bucketName);
+    if (!be) {
+      console.log(chalk.yellow("Bucket does not exist, skipping delete..."));
+
+      return Promise.resolve();
+    }
+
     const results = await client.send(
       new ListObjectsCommand({ Bucket: bucketName })
     );
@@ -33,10 +68,12 @@ export async function deleteBucket(bucketName: string) {
 
     await client.send(new DeleteBucketCommand({ Bucket: bucketName }));
 
-    console.log("finished deleting s3 bucket");
+    console.log(chalk.green("Finished deleting s3 bucket"));
 
     return Promise.resolve();
   } catch (err) {
+    console.log("Delete bucket failed");
+
     return Promise.reject(err);
   }
 }
@@ -46,12 +83,35 @@ export async function createBucket(bucketName: string) {
     const createBucketCommand = new CreateBucketCommand({ Bucket: bucketName });
     const data = await client.send(createBucketCommand);
 
-    console.log("Successfully created a bucket");
-    return Promise.resolve();
+    console.log(chalk.green(`Successfully created bucket`));
+
+    return Promise.resolve(data);
   } catch (err) {
-    console.log(err);
-    console.log("failed to create bucket");
-    return Promise.reject();
+    console.log("Failed to create bucket");
+
+    // @ts-ignore
+    if (err.Code === "BucketAlreadyExists") {
+      throw bucketExistsError;
+    }
+
+    return Promise.reject(err);
+  }
+}
+
+// http://mybucketasdfadzz123123.s3-website-us-east-1.amazonaws.com
+export async function getBucketURL(bucketName: string): Promise<string> {
+  try {
+    const location = await client.send(
+      new GetBucketLocationCommand({ Bucket: bucketName })
+    );
+
+    const region = location.LocationConstraint || "us-east-1";
+
+    const url = `${bucketName}.s3-website-${region}.amazonaws.com`;
+
+    return Promise.resolve(url);
+  } catch (err) {
+    return Promise.reject(err);
   }
 }
 
@@ -64,18 +124,31 @@ export async function configureS3Bucket(bucketName: string) {
 
   try {
     const putBucketWebsiteCommand = new PutBucketWebsiteCommand(websiteParams);
-    await client.send(putBucketWebsiteCommand);
+    const result = await client.send(putBucketWebsiteCommand);
 
-    console.log("successfully configured bucket as s3 website");
+    console.log(chalk.green("Successfully configured bucket as s3 website"));
+
+    const finalS3ACLPolicy = {
+      ...s3ACLPolicy,
+    };
+    finalS3ACLPolicy.Statement[0].Resource = `arn:aws:s3:::${bucketName}/*`;
 
     await client.send(
       new PutBucketPolicyCommand({
         Bucket: bucketName,
-        Policy: JSON.stringify(s3ACLPolicy),
+        Policy: JSON.stringify(finalS3ACLPolicy),
       })
     );
 
-    console.log("successfully configured bucket policy");
+    console.log(chalk.green("Successfully configured bucket policy"));
+
+    console.log(chalk.green("Bucket url:"));
+
+    console.log(
+      chalk.green(
+        `https://s3.console.aws.amazon.com/s3/buckets/${bucketName}\n`
+      )
+    );
 
     return Promise.resolve();
   } catch (err) {
