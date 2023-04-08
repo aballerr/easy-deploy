@@ -1,27 +1,11 @@
-import path from "path";
-import fs from "fs";
 import finder from "find-package-json";
 
-export const findRootDir = () => {
-  let currentDir = process.cwd();
-
-  console.log(currentDir);
-
-  console.log(__dirname);
-
-  console.log("package.json location");
-
+export const findRootDir = (): String => {
   const result = finder(__dirname);
+  const baseDirectory = result.next().value?.__path || "";
+  const rootPath = baseDirectory.replace("/package.json", "");
 
-  console.log(result.next().value?.__path);
+  console.log(rootPath);
 
-  // let rootDir = "";
-  // while (currentDir !== "/") {
-  //     if (fs.existsSync(path.join(currentDir, "package.json"))) {
-  //     rootDir = currentDir;
-  //     break;
-  //     }
-  //     currentDir = path.join(currentDir, "../");
-  // }
-  // return rootDir;
+  return rootPath;
 };
