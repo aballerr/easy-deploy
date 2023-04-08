@@ -1,5 +1,6 @@
 import path from "path";
 import fs from "fs";
+import finder from "find-package-json";
 
 export const findRootDir = () => {
   let currentDir = process.cwd();
@@ -8,7 +9,11 @@ export const findRootDir = () => {
 
   console.log(__dirname);
 
-  console.log("making sure this works");
+  console.log("package.json location");
+
+  const result = finder(__dirname);
+
+  console.log(result.next().value?.__path);
 
   // let rootDir = "";
   // while (currentDir !== "/") {
