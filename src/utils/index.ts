@@ -8,6 +8,8 @@ export const findRootDir = () => {
 
   console.log(__dirname);
 
+  console.log("making sure this works");
+
   // let rootDir = "";
   // while (currentDir !== "/") {
   //     if (fs.existsSync(path.join(currentDir, "package.json"))) {
