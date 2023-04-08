@@ -8,7 +8,7 @@
   "scripts": {
     "build": "rimraf ./build && tsc && cp package.json build/src",
     "deploy": "npx ts-node ./src/index.ts",
-    "update-npm": "npm version patch && npm run build && && cd build/src && npm publish"
+    "update-npm": "npm version patch && npm run build && cd build/src && npm publish && cd ../.."
   },
   "bin": {
     "youdeploy": "index.js"
