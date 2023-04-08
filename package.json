@@ -6,9 +6,9 @@
   "author": "Alex",
   "license": "MIT",
   "scripts": {
-    "build": "rimraf ./build && tsc",
+    "build": "rimraf ./build && tsc && cp package.json build/src",
     "deploy": "npx ts-node ./src/index.ts",
-    "update-npm": "npm run build && npm version patch && npm publish"
+    "update-npm": "npm version patch && npm run build && && cd build/src && npm publish"
   },
   "bin": {
     "youdeploy": "index.js"
