@@ -5,11 +5,11 @@ import {
   createBucket,
   deleteBucket,
   uploadFolderToS3Bucket,
-} from "./aws/wrappers";
+} from ".";
 
-import { findRootDir } from "./utils";
+import { findRootDir } from "../../utils";
 
-async function main(BUCKET_NAME: string, dirName?: string) {
+export async function main(BUCKET_NAME: string, dirName?: string) {
   const rootDir = findRootDir();
 
   await createBucket(BUCKET_NAME);
@@ -17,5 +17,3 @@ async function main(BUCKET_NAME: string, dirName?: string) {
   await uploadFolderToS3Bucket(rootDir, BUCKET_NAME, dirName ?? "build", "");
   await createOrInvalidateCloudfrontDistribution(BUCKET_NAME);
 }
-
-main("13113111zztempbucket", "react-build");
