@@ -3,3 +3,7 @@ src/sample-react-build/*
 build/*
 my-app/*
 react-build/*
+
+
+# aws-cdk
+cdk.out
