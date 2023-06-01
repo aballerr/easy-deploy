@@ -1,6 +1,6 @@
 {
   "name": "youdeploy",
-  "version": "0.0.27",
+  "version": "0.0.28",
   "description": "An open source project to deploy your frontend in one click on your own resources.",
   "main": "build/index.js",
   "author": "Alex",
