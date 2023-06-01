@@ -44,8 +44,5 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/aballerr/easy-deploy.git"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }
